@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6 lg:px-8">
+    <header class="rounded-xl border border-border bg-white p-5 shadow-sm">
+        <h1 class="text-xl font-bold">Gene: {{ gene_name }}</h1>
+        <p class="mt-1 text-sm text-neutral">{{ results|length }} distinct alleles shown (limit {{ limit }}; add <span class="font-mono">?limit=500</span> for more). Matched on ANNOVAR refGene and dbNSFP gene symbols.</p>
+    </header>
+
+    <section class="rounded-xl border border-border bg-white p-5 shadow-sm">
+        <form id="genePageSearchForm" class="grid gap-3 sm:grid-cols-[1fr_auto]">
+            <input id="genePageInput" type="text" value="{{ gene_name }}" class="rounded border-border text-sm" placeholder="MYH9">
+            <button class="rounded bg-primary px-4 py-2 text-sm font-semibold text-white">Search gene</button>
+        </form>
+        <div class="mt-3 flex gap-2">
+            <button class="rounded-md border border-border px-3 py-1.5 text-xs font-semibold" data-download-format="csv">⬇ CSV</button>
+            <button class="rounded-md border border-border px-3 py-1.5 text-xs font-semibold" data-download-format="tsv">⬇ TSV</button>
+            <button class="rounded-md border border-border px-3 py-1.5 text-xs font-semibold" data-download-format="json">⬇ JSON</button>
+        </div>
+    </section>
+
+    <section class="rounded-xl border border-border bg-white p-5 shadow-sm">
+        {% if not results %}
+        <p class="text-sm text-neutral">No alleles found for {{ gene_name }} on this instance ({{ coverage.label }}).</p>
+        {% else %}
+        <div class="overflow-x-auto">
+            <table id="geneResultsTable" class="min-w-full divide-y divide-border text-sm">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-3 py-2 text-left">Variant</th>
+                        <th class="px-3 py-2 text-left">Consequence</th>
+                        <th class="px-3 py-2 text-left">ClinVar</th>
+                        <th class="px-3 py-2 text-left">AnnotateMissense</th>
+                        <th class="px-3 py-2 text-left">Pred</th>
+                        <th class="px-3 py-2 text-left">AlphaMissense</th>
+                        <th class="px-3 py-2 text-left">CADD</th>
+                        <th class="px-3 py-2 text-left">REVEL</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    {% for row in results %}
+                    <tr class="{{ 'row-damaging' if row.annotatemissense_pred == 'D' else 'row-tolerated' if row.annotatemissense_pred == 'T' else '' }}">
+                        <td class="px-3 py-2 font-mono text-xs"><a class="text-primary underline" href="{{ url_for('web.results', chr=row.chr, pos=row.pos, ref=row.ref, alt=row.alt) }}">{{ row.chr }}:{{ row.pos }} {{ row.ref }}&gt;{{ row.alt }}</a></td>
+                        <td class="px-3 py-2">{{ row.exonic_func or '—' }}</td>
+                        <td class="px-3 py-2">{{ row.CLNSIG or '—' }}</td>
+                        <td class="px-3 py-2 font-mono">{{ '%.4f'|format(row.annotatemissense_score) if row.annotatemissense_score is not none else '—' }}</td>
+                        <td class="px-3 py-2">{{ row.annotatemissense_pred or '—' }}</td>
+                        <td class="px-3 py-2 font-mono">{{ row.AlphaMissense if row.AlphaMissense is not none else '—' }}</td>
+                        <td class="px-3 py-2 font-mono">{{ row.CADD_phred if row.CADD_phred is not none else '—' }}</td>
+                        <td class="px-3 py-2 font-mono">{{ row.REVEL_score if row.REVEL_score is not none else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </section>
+</section>
+
+<script id="gene-initial-json" type="application/json">{{ results | tojson }}</script>
+{% endblock %}

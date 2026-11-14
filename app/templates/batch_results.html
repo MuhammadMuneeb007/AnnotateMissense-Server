@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6 lg:px-8">
+    <header class="rounded-xl border border-border bg-white p-5 shadow-sm">
+        <h1 class="text-xl font-bold">Batch Results</h1>
+        <p class="mt-1 text-sm text-neutral">Results of the last variant-list lookup from the Search page (kept only in this browser tab).</p>
+    </header>
+
+    <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5" id="batchSummaryCards">
+        <div class="rounded-xl border border-border bg-white p-4 text-sm"><p class="text-neutral">Variants submitted</p><p id="sumSubmitted" class="text-xl font-bold">0</p></div>
+        <div class="rounded-xl border border-border bg-white p-4 text-sm"><p class="text-neutral">Found</p><p id="sumFound" class="text-xl font-bold text-success">0</p></div>
+        <div class="rounded-xl border border-border bg-white p-4 text-sm"><p class="text-neutral">Not found</p><p id="sumNotFound" class="text-xl font-bold text-warning">0</p></div>
+        <div class="rounded-xl border border-border bg-white p-4 text-sm"><p class="text-neutral">Damaging</p><p id="sumDamaging" class="text-xl font-bold text-danger">0</p></div>
+        <div class="rounded-xl border border-border bg-white p-4 text-sm"><p class="text-neutral">Tolerated</p><p id="sumTolerated" class="text-xl font-bold text-success">0</p></div>
+    </section>
+
+    <section class="grid gap-4 md:grid-cols-3">
+        <div class="rounded-xl border border-border bg-white p-4">
+            <p class="mb-2 text-sm font-semibold">Damaging vs Tolerated</p>
+            <canvas id="batchDonutChart" height="160"></canvas>
+        </div>
+        <div class="rounded-xl border border-border bg-white p-4">
+            <p class="mb-2 text-sm font-semibold">AnnotateMissense score distribution</p>
+            <canvas id="batchHistogramChart" height="160"></canvas>
+        </div>
+        <div class="rounded-xl border border-border bg-white p-4">
+            <p class="mb-2 text-sm font-semibold">ClinVar breakdown</p>
+            <canvas id="batchClinvarChart" height="160"></canvas>
+        </div>
+    </section>
+
+    <section class="rounded-xl border border-border bg-white p-4 shadow-sm">
+        <div class="flex flex-wrap items-center gap-2">
+            <button class="batch-filter rounded-md border border-border px-3 py-1.5 text-xs font-semibold" data-filter="all">All</button>
+            <button class="batch-filter rounded-md border border-border px-3 py-1.5 text-xs font-semibold" data-filter="damaging">Damaging only</button>
+            <button class="batch-filter rounded-md border border-border px-3 py-1.5 text-xs font-semibold" data-filter="clinvar">Has ClinVar</button>
+            <button class="batch-filter rounded-md border border-border px-3 py-1.5 text-xs font-semibold" data-filter="missing">Missing scores</button>
+            <input id="batchGeneSearch" type="text" placeholder="Filter by gene" class="ml-auto rounded border-border text-sm">
+        </div>
+        <div class="mt-3 overflow-x-auto">
+            <table id="batchResultsTable" class="min-w-full divide-y divide-border text-sm">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="sortable px-3 py-2 text-left" data-key="variant">Variant</th>
+                        <th class="sortable px-3 py-2 text-left" data-key="gene">Gene</th>
+                        <th class="sortable px-3 py-2 text-left" data-key="annotatemissense_score">AnnotateMissense score</th>
+                        <th class="sortable px-3 py-2 text-left" data-key="annotatemissense_pred">Pred</th>
+                        <th class="sortable px-3 py-2 text-left" data-key="AlphaMissense">AlphaMissense</th>
+                        <th class="sortable px-3 py-2 text-left" data-key="CADD_phred">CADD</th>
+                        <th class="sortable px-3 py-2 text-left" data-key="REVEL_score">REVEL</th>
+                        <th class="sortable px-3 py-2 text-left" data-key="CLNSIG">ClinVar</th>
+                    </tr>
+                </thead>
+                <tbody id="batchResultsBody" class="divide-y divide-border"></tbody>
+            </table>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-xs">
+            <div id="batchPageInfo" class="text-neutral">Page 1</div>
+            <div class="flex gap-2">
+                <button id="batchPrevPage" class="rounded border border-border px-2 py-1">Prev</button>
+                <button id="batchNextPage" class="rounded border border-border px-2 py-1">Next</button>
+            </div>
+        </div>
+        <div class="mt-4 flex flex-wrap gap-2">
+            <button class="rounded-md border border-border px-3 py-1.5 text-xs font-semibold" data-download-format="csv">⬇ Download CSV</button>
+            <button class="rounded-md border border-border px-3 py-1.5 text-xs font-semibold" data-download-format="json">⬇ Download JSON</button>
+            <button class="rounded-md border border-border px-3 py-1.5 text-xs font-semibold" data-download-format="tsv">⬇ Download TSV</button>
+        </div>
+    </section>
+</section>
+{% endblock %}

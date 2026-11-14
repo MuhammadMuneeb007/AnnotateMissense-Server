@@ -1,0 +1,9 @@
+##fileformat=VCFv4.2
+##reference=GRCh38
+##contig=<ID=chr22,length=50818468,assembly=GRCh38>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr22	19963748	rs4680	G	A	.	PASS	.
+chr22	21549460	.	C	A,G	.	PASS	.
+chr22	36284163	.	C	T	.	PASS	.
+chr22	36284474	.	C	T	.	PASS	.
+chr22	36305985	.	G	A	.	PASS	.

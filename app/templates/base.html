@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AnnotateMissense: precomputed GRCh38 missense pathogenicity scores, VCF annotation and REST API.">
+    {% block extra_meta %}{% endblock %}
+    <title>{{ page_title or "Home" }} · AnnotateMissense</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ["Inter", "sans-serif"], mono: ["JetBrains Mono", "monospace"] },
+                    colors: {
+                        primary: "#0f766e", primaryLt: "#ccfbf1", danger: "#dc2626", warning: "#b45309",
+                        success: "#15803d", neutral: "#64748b", bg: "#f8fafc", card: "#ffffff", border: "#e2e8f0",
+                    },
+                },
+            },
+        };
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="bg-bg text-slate-800 min-h-screen flex flex-col">
+    <header class="sticky top-0 z-40 border-b border-border/70 bg-white/95 backdrop-blur">
+        <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+            <a href="{{ url_for('web.index') }}" class="flex items-center gap-2 text-lg font-extrabold tracking-tight text-primary sm:text-xl">
+                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3c0 6 10 6 10 12s-10 6-10 6M17 3c0 6-10 6-10 12M8 7h8M8 17h8"/></svg>
+                AnnotateMissense
+            </a>
+            <nav class="hidden items-center gap-5 text-sm font-medium text-slate-600 md:flex">
+                <a href="{{ url_for('web.index') }}" class="hover:text-primary">Search</a>
+                <a href="{{ url_for('web.annotate_page') }}" class="hover:text-primary">Annotate VCF</a>
+                <a href="{{ url_for('web.batch_results') }}" class="hover:text-primary">Batch</a>
+                <a href="{{ url_for('web.compare_page') }}" class="hover:text-primary">Compare</a>
+                <a href="{{ url_for('web.api_docs') }}" class="hover:text-primary">API</a>
+                <a href="{{ url_for('web.help_page') }}" class="hover:text-primary">Help</a>
+                <a href="{{ docs_url }}" target="_blank" rel="noopener" class="rounded-md border border-border px-3 py-1.5 hover:border-primary hover:text-primary">Docs ↗</a>
+            </nav>
+        </div>
+        {% if not coverage.genome_wide %}
+        <div class="border-t border-amber-200 bg-amber-50">
+            <p class="mx-auto max-w-7xl px-4 py-1.5 text-xs text-amber-900 sm:px-6 lg:px-8">
+                <strong>Demo instance:</strong> this server holds {{ coverage.label }} ({{ "{:,}".format(coverage.annotation_rows or coverage.score_index_alleles or 0) }} rows).
+                The full 90.6M-variant release runs on the same software — see <a class="underline" href="{{ docs_url }}server/" target="_blank" rel="noopener">self-hosting</a>.
+                {% if instance_note %}{{ instance_note }}{% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </header>
+
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="border-t border-border bg-white">
+        <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-5 text-xs text-neutral sm:px-6 lg:px-8">
+            <span>AnnotateMissense v{{ app_version }} · {{ genome_build }} · Research use only — not for clinical decision-making</span>
+            <span class="flex flex-wrap gap-3">
+                <a class="hover:text-primary" href="https://doi.org/{{ zenodo_doi }}" target="_blank" rel="noopener">Data: doi:{{ zenodo_doi }}</a>
+                <a class="hover:text-primary" href="{{ repo_url }}" target="_blank" rel="noopener">Pipeline</a>
+                <a class="hover:text-primary" href="{{ server_repo_url }}" target="_blank" rel="noopener">Server code</a>
+                <a class="hover:text-primary" href="{{ url_for('web.development_page') }}">About</a>
+                <a class="hover:text-primary" href="{{ url_for('web.privacy') }}">Privacy (no cookies, no tracking)</a>
+            </span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

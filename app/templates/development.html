@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6 lg:px-8">
+    <header class="rounded-xl border border-border bg-white p-6 shadow-sm">
+        <p class="text-xs font-semibold uppercase tracking-wide text-primary">About</p>
+        <h1 class="mt-2 text-2xl font-extrabold text-slate-900">AnnotateMissense</h1>
+        <p class="mt-2 text-sm text-neutral"><em>AnnotateMissense: a genome-wide annotation and benchmarking framework for missense pathogenicity prediction.</em> Muhammad Muneeb and David B. Ascher.</p>
+        <div class="mt-4 flex flex-wrap gap-2">
+            <a href="{{ repo_url }}" target="_blank" rel="noopener" class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">Pipeline repository</a>
+            <a href="{{ server_repo_url }}" target="_blank" rel="noopener" class="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Server repository</a>
+            <a href="https://doi.org/{{ zenodo_doi }}" target="_blank" rel="noopener" class="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Zenodo release</a>
+            <a href="{{ docs_url }}" target="_blank" rel="noopener" class="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Documentation</a>
+        </div>
+    </header>
+
+    <section class="grid gap-4 md:grid-cols-3">
+        <article class="rounded-xl border border-border bg-white p-5 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wide text-primary">1 · Annotation</p>
+            <p class="mt-2 text-sm text-neutral">90,643,830 GRCh38 missense SNVs (dbNSFP v5.1, CAGI7) annotated with ANNOVAR gene-, region- and filter-based databases (dbNSFP v4.2a/c, gnomAD v2.1.1/v3.0, ClinVar, dbSNP…) and merged with AlphaMissense and ESM1v predictions.</p>
+        </article>
+        <article class="rounded-xl border border-border bg-white p-5 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wide text-primary">2 · Benchmark</p>
+            <p class="mt-2 text-sm text-neutral">132,714 ClinVar P/LP vs B/LB variants; stratified five-fold CV. XGBoost on the full feature set: mean MCC 0.9411, ROC-AUC 0.9950; genomic-allele-grouped CV MCC 0.9380. Circularity-controlled ablations quantify reliance on prior predictors.</p>
+        </article>
+        <article class="rounded-xl border border-border bg-white p-5 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wide text-primary">3 · Genome-wide inference</p>
+            <p class="mt-2 text-sm text-neutral">A genome-wide XGBoost classifier (1,044 input dimensions) scored every allele. Temporal validation on 298,353 newer ClinVar variants: MCC 0.7613, accuracy 0.8798.</p>
+        </article>
+    </section>
+
+    <section class="rounded-xl border border-border bg-white p-5 shadow-sm">
+        <h2 class="text-base font-bold">Licence and data rights</h2>
+        <p class="mt-2 text-sm text-neutral">The Zenodo deposit is listed under CC BY 4.0. It embeds values from third-party resources (dbNSFP components, ANNOVAR-distributed databases, AlphaMissense, ClinVar, gnomAD) that keep their own terms; some dbNSFP components are restricted to non-commercial use. See the <a class="text-primary underline" href="{{ docs_url }}licensing/" target="_blank" rel="noopener">licensing page</a> before redistribution or commercial use.</p>
+    </section>
+</section>
+{% endblock %}

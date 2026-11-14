@@ -1,0 +1,8 @@
+# Core (lookup, CLI, VCF annotation)
+duckdb>=1.4.3,<2
+# Web server and REST API
+flask>=3.0,<4
+flask-cors>=4.0
+flask-limiter>=3.7
+waitress>=3.0
+gunicorn>=22.0; platform_system != "Windows"

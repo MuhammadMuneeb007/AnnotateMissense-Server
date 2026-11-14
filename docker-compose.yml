@@ -1,0 +1,23 @@
+# docker compose up -d   ->  http://localhost:8080
+# Put variants.duckdb (from Zenodo) and/or annotatemissense_scores.duckdb in ./data
+services:
+  web:
+    build: .
+    environment:
+      ANNOTATEMISSENSE_DB: /data/variants.duckdb
+      # ANNOTATEMISSENSE_SCORES: /data/annotatemissense_scores.duckdb
+      TRUST_PROXY: "1"
+      MAX_VCF_ALLELES: "50000"
+      RATE_LIMIT: "1000/hour"
+    volumes:
+      - ./data:/data:ro
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on: [web]
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped

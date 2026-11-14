@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="mx-auto max-w-4xl space-y-5 px-4 py-6 sm:px-6 lg:px-8">
+    <article class="space-y-3 rounded-xl border border-border bg-white p-5 text-sm shadow-sm">
+        <h1 class="text-xl font-bold">Privacy</h1>
+        <p><strong>This server sets no cookies, runs no analytics and stores no submitted variants or files.</strong> Uploads are parsed in memory, answered, and discarded.</p>
+        <p>The web server keeps a per-IP request counter in memory for rate limiting only. Standard access logs (time, path, status) may be written by the hosting process; they do not contain uploaded file contents.</p>
+        <p>Batch results are kept in your own browser (<code class="font-mono">localStorage</code>) so the results page can display them; clear your browser storage to remove them.</p>
+        <p>For identifiable or clinical data, do not upload: download the release and annotate offline with <code class="font-mono">annotatemissense annotate-vcf</code>, which makes no network requests.</p>
+    </article>
+</section>
+{% endblock %}

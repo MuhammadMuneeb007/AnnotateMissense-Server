@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6 lg:px-8">
+    <header class="rounded-xl border border-border bg-white p-5 shadow-sm">
+        <h1 class="text-xl font-bold">Variant Comparison</h1>
+        <p class="mt-1 text-sm text-neutral">Compare 2 to 4 GRCh38 variants side by side.</p>
+    </header>
+
+    <section class="rounded-xl border border-border bg-white p-5 shadow-sm">
+        <label for="compareVariantsText" class="text-sm font-semibold">Variants (chr pos ref alt)</label>
+        <textarea id="compareVariantsText" class="mt-2 h-32 w-full rounded border-border text-sm" placeholder="22 36305985 G A&#10;22 19963748 G A">{% for v in initial_variants %}{{ v.chr }} {{ v.pos }} {{ v.ref }} {{ v.alt }}
+{% endfor %}</textarea>
+        <button id="compareSubmit" class="mt-3 rounded bg-primary px-4 py-2 text-sm font-semibold text-white">Compare Variants</button>
+    </section>
+
+    <section class="rounded-xl border border-border bg-white p-5 shadow-sm">
+        <h2 class="text-base font-bold">Comparison Summary</h2>
+        <p id="compareSummary" class="mt-2 text-sm text-neutral">No comparison yet.</p>
+        <div class="mt-4 overflow-x-auto">
+            <table id="compareTable" class="min-w-full divide-y divide-border text-sm">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-3 py-2 text-left">Variant</th>
+                        <th class="px-3 py-2 text-left">Gene</th>
+                        <th class="px-3 py-2 text-left">AnnotateMissense score</th>
+                        <th class="px-3 py-2 text-left">Pred</th>
+                        <th class="px-3 py-2 text-left">AlphaMissense</th>
+                        <th class="px-3 py-2 text-left">CADD</th>
+                        <th class="px-3 py-2 text-left">REVEL</th>
+                        <th class="px-3 py-2 text-left">MetaRNN</th>
+                    </tr>
+                </thead>
+                <tbody id="compareTableBody" class="divide-y divide-border"></tbody>
+            </table>
+        </div>
+    </section>
+</section>
+{% endblock %}

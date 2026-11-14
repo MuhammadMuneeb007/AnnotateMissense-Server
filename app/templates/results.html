@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block extra_meta %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
+{% block content %}
+<section class="sticky top-[57px] z-30 border-b border-border bg-white">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        <div>
+            <h1 id="variantHeaderTitle" class="font-mono text-lg font-bold">{{ query.chr or '--' }}:{{ query.pos or '--' }} {{ query.ref or '' }} → {{ query.alt or '' }}</h1>
+            <p id="variantHeaderMeta" class="text-sm text-neutral">GRCh38</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <span id="clinvarBadge" class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">ClinVar</span>
+            <button id="download-json" class="rounded-md border border-border bg-white px-3 py-1.5 text-xs font-semibold">Download all 337 columns (JSON)</button>
+            <button id="share-link" class="rounded-md border border-border bg-white px-3 py-1.5 text-xs font-semibold">Copy link</button>
+        </div>
+    </div>
+</section>
+
+<section class="mx-auto max-w-7xl space-y-5 px-4 py-5 sm:px-6 lg:px-8">
+    {% if error_message %}
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{{ error_message }}</div>
+    {% endif %}
+
+    <div id="resultsFallback" class="rounded-xl border border-border bg-white p-4 text-sm text-neutral {% if payload or error_message %}hidden{% endif %}">
+        Submit chr, pos, ref and alt to load a variant.
+    </div>
+
+    <section id="section-model" class="rounded-xl border border-border bg-white p-5 shadow-sm {% if not payload %}hidden{% endif %}">
+        <h2 class="border-l-4 border-primary pl-3 text-lg font-bold">AnnotateMissense prediction</h2>
+        <div class="mt-4 grid gap-4 lg:grid-cols-2">
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div class="relative rounded-lg border border-border p-3">
+                    <canvas id="amGauge" height="180"></canvas>
+                    <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                        <span id="amGaugeValue" class="text-2xl font-extrabold">--</span>
+                        <span id="amGaugeLabel" class="text-xs font-semibold text-neutral">--</span>
+                    </div>
+                </div>
+                <div class="space-y-2 rounded-lg border border-border p-3 text-sm">
+                    <p><span class="font-semibold">Score:</span> <span id="amScoreText" class="font-mono">--</span></p>
+                    <p><span class="font-semibold">Prediction:</span> <span id="amPredText">--</span> <span class="text-xs text-neutral">(D if score ≥ 0.5)</span></p>
+                    <p><span class="font-semibold">Confidence:</span> <span id="amConfText" class="font-mono">--</span></p>
+                    <p class="text-xs text-neutral">Confidence is the probability of the predicted class, max(score, 1 − score). Stored in the release as <code class="font-mono">UQ_score</code>, <code class="font-mono">UQ_pred</code>, <code class="font-mono">UQ_sd</code>.</p>
+                    <p class="text-xs text-neutral">Database rows for this allele: <span id="amRowsText" class="font-mono">--</span></p>
+                </div>
+            </div>
+            <div class="rounded-lg border border-border p-3">
+                <p class="mb-2 text-sm font-semibold">ESM1v (5 models) <span class="font-normal text-neutral">· combined <span id="combinedScoreText" class="font-mono">--</span></span></p>
+                <canvas id="esmChart" height="170"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <section id="section-info" class="grid gap-4 lg:grid-cols-2 {% if not payload %}hidden{% endif %}">
+        <article class="rounded-xl border border-border bg-white p-5 shadow-sm">
+            <h2 class="text-base font-bold">Variant information</h2>
+            <dl class="mt-3 grid grid-cols-[140px_1fr] gap-x-4 gap-y-2 text-sm">
+                <dt class="text-neutral">rsID</dt><dd id="infoRsid" class="font-mono">--</dd>
+                <dt class="text-neutral">Gene (refGene)</dt><dd id="infoGene">--</dd>
+                <dt class="text-neutral">Consequence</dt><dd id="infoFunction">--</dd>
+                <dt class="text-neutral">AA change</dt><dd id="infoAa" class="break-all font-mono text-xs">--</dd>
+                <dt class="text-neutral">Cytoband</dt><dd id="infoCytoband">--</dd>
+                <dt class="text-neutral">Ensembl gene</dt><dd><a id="infoEnsembl" href="#" target="_blank" rel="noopener" class="font-mono text-primary underline">--</a></dd>
+                <dt class="text-neutral">hg19 position</dt><dd id="infoHg19" class="font-mono">--</dd>
+                <dt class="text-neutral">InterPro domain</dt><dd id="infoDomain" class="text-xs">--</dd>
+            </dl>
+        </article>
+        <article class="rounded-xl border border-border bg-white p-5 shadow-sm">
+            <h2 class="text-base font-bold">ClinVar</h2>
+            <div class="mt-3 space-y-2 break-words text-sm">
+                <p><span class="font-semibold">Clinical significance:</span> <span id="clinSigText" class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold">--</span></p>
+                <p><span class="font-semibold">Condition:</span> <span id="clinDisease" class="break-words">--</span></p>
+                <p><span class="font-semibold">Review status:</span> <span id="clinReview">--</span></p>
+                <p><span class="font-semibold">Review stars:</span> <span id="clinStars">☆☆☆☆</span></p>
+                <a id="clinvarLink" href="#" target="_blank" rel="noopener" class="text-primary underline">Open in ClinVar</a>
+                <p class="text-xs text-neutral">ClinVar values are those embedded in the release (ANNOVAR clinvar database), not live ClinVar.</p>
+            </div>
+        </article>
+    </section>
+
+    <section id="section-transcripts" class="rounded-xl border border-border bg-white p-5 shadow-sm {% if not payload %}hidden{% endif %}">
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 class="text-base font-bold">Transcript context</h2>
+            <span id="txPerAllele" class="rounded-full bg-primaryLt px-3 py-1 text-xs font-semibold text-primary">--</span>
+        </div>
+        <p class="mt-1 text-xs text-neutral">AnnotateMissense reports one score per genomic allele. Its input features come from several sources, each with its own transcript choice:</p>
+        <div class="mt-3 overflow-x-auto">
+            <table class="min-w-full divide-y divide-border text-sm">
+                <thead class="bg-slate-50"><tr>
+                    <th class="px-3 py-2 text-left font-semibold">Source</th>
+                    <th class="px-3 py-2 text-left font-semibold">Transcript(s) / protein</th>
+                    <th class="px-3 py-2 text-left font-semibold">Protein change</th>
+                    <th class="px-3 py-2 text-left font-semibold">Consistent with dbNSFP residues</th>
+                </tr></thead>
+                <tbody id="txTableBody" class="divide-y divide-border"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="section-scores" class="rounded-xl border border-border bg-white p-5 shadow-sm {% if not payload %}hidden{% endif %}">
+        <h2 class="text-base font-bold">Prior pathogenicity predictors (dbNSFP v4.2a via ANNOVAR)</h2>
+        <div class="mt-3 rounded-lg border border-border p-3"><canvas id="scoreComparisonChart" height="110"></canvas></div>
+        <p class="mt-2 text-xs text-neutral">Chart values are scaled to 0–1 for display (CADD/40, 1−SIFT, |PROVEAN|/12). Click a row for a description.</p>
+        <div class="mt-3 overflow-x-auto">
+            <table id="detailedScoreTable" class="min-w-full divide-y divide-border text-sm">
+                <thead class="bg-slate-50"><tr>
+                    <th class="px-3 py-2 text-left font-semibold">Score</th>
+                    <th class="px-3 py-2 text-left font-semibold">Value</th>
+                    <th class="px-3 py-2 text-left font-semibold">Call (tool's usual cut-off)</th>
+                    <th class="px-3 py-2 text-left font-semibold">Visual</th>
+                </tr></thead>
+                <tbody class="divide-y divide-border" id="scoreTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="grid gap-4 lg:grid-cols-2">
+        <section id="section-population" class="rounded-xl border border-border bg-white p-5 shadow-sm {% if not payload %}hidden{% endif %}">
+            <h2 class="text-base font-bold">Population frequency (gnomAD v3.0)</h2>
+            <div class="mt-3 rounded-lg border border-border p-3"><canvas id="populationChart" height="150"></canvas></div>
+            <p id="popNote" class="mt-3 text-sm text-neutral">--</p>
+            <p class="mt-1 text-xs text-neutral">ExAC (all): <span id="exacText" class="font-mono">--</span> · popmax AF: <span id="popmaxText" class="font-mono">--</span></p>
+        </section>
+        <section id="section-conservation" class="rounded-xl border border-border bg-white p-5 shadow-sm {% if not payload %}hidden{% endif %}">
+            <h2 class="text-base font-bold">Conservation</h2>
+            <div class="mt-3 rounded-lg border border-border p-3"><canvas id="conservationChart" height="150"></canvas></div>
+        </section>
+    </section>
+
+    <section id="section-compare" class="rounded-xl border border-border bg-white p-5 shadow-sm {% if not payload %}hidden{% endif %}">
+        <h2 class="text-base font-bold">Compare with other variants</h2>
+        <button id="openCompareDrawer" class="mt-3 rounded-md border border-border bg-white px-3 py-2 text-sm font-semibold">+ Compare up to 4 variants</button>
+    </section>
+</section>
+
+<aside id="compareDrawer" class="fixed right-0 top-0 z-50 hidden h-full w-full max-w-md border-l border-border bg-white p-4 shadow-2xl">
+    <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold">Variant comparison</h3>
+        <button id="closeCompareDrawer" class="rounded border border-border px-2 py-1 text-xs font-semibold">Close</button>
+    </div>
+    <p class="mt-2 text-xs text-neutral">Enter 2–4 variants, one per line: chr pos ref alt</p>
+    <textarea id="compareInput" class="mt-3 h-32 w-full rounded border-border font-mono text-sm" placeholder="22 36305985 G A&#10;22 19963748 G A"></textarea>
+    <button id="runCompareButton" class="mt-3 rounded bg-primary px-3 py-2 text-sm font-semibold text-white">Run compare</button>
+    <pre id="compareOutput" class="mt-3 max-h-[60vh] overflow-auto rounded bg-slate-50 p-3 text-xs"></pre>
+</aside>
+
+<script id="results-payload" type="application/json">{{ (payload or {}) | tojson }}</script>
+<script id="results-query" type="application/json">{{ query | tojson }}</script>
+<script id="results-error" type="application/json">{{ (error_message or "") | tojson }}</script>
+{% endblock %}

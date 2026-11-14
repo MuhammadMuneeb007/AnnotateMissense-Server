@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="mx-auto max-w-4xl space-y-5 px-4 py-6 sm:px-6 lg:px-8">
+    <header class="rounded-xl border border-border bg-white p-5 shadow-sm">
+        <h1 class="text-xl font-bold">Help</h1>
+        <p class="mt-1 text-sm text-neutral">Full documentation: <a class="text-primary underline" href="{{ docs_url }}" target="_blank" rel="noopener">{{ docs_url }}</a></p>
+    </header>
+
+    <article class="space-y-3 rounded-xl border border-border bg-white p-5 text-sm shadow-sm">
+        <h2 class="text-base font-bold">What is scored</h2>
+        <p>AnnotateMissense is a <strong>precomputed lookup</strong>. Scores exist for the GRCh38 nonsynonymous single-nucleotide variants of the
+            CAGI7 Annotate-All-Missense input (dbNSFP v5.1; 90,643,830 rows). The server does not run the model on new alleles; indels, MNVs and
+            non-coding variants are reported as <code class="font-mono">not_snv</code> or <code class="font-mono">not_in_release</code>.
+            A missing score is <em>not</em> evidence of benignity.</p>
+        <p>Coordinates must be <strong>GRCh38/hg38, 1-based</strong>. Lift GRCh37 data over first. Chromosomes can be written <code class="font-mono">22</code> or <code class="font-mono">chr22</code>.</p>
+    </article>
+
+    <article class="space-y-3 rounded-xl border border-border bg-white p-5 text-sm shadow-sm">
+        <h2 class="text-base font-bold">Input formats</h2>
+        <ul class="list-disc space-y-1 pl-5">
+            <li>Single variant: chromosome, position, reference and alternate allele.</li>
+            <li>Variant list: one per line, separated by spaces, tabs or commas — <code class="font-mono">22 36305985 G A</code>; or <code class="font-mono">22:36305985:G:A</code> in the API.</li>
+            <li>VCF: v4.x, plain or gzip/bgzip; multi-allelic ALTs are split and each ALT is scored separately. Padded representations such as <code class="font-mono">CG&gt;CA</code> are trimmed to the SNV <code class="font-mono">G&gt;A</code>.</li>
+        </ul>
+    </article>
+
+    <article class="space-y-3 rounded-xl border border-border bg-white p-5 text-sm shadow-sm">
+        <h2 class="text-base font-bold">Interpreting the output</h2>
+        <ul class="list-disc space-y-1 pl-5">
+            <li><strong>Score</strong> (0–1): AnnotateMissense XGBoost probability of pathogenicity.</li>
+            <li><strong>Prediction</strong>: D (damaging) if score ≥ 0.5, otherwise T (tolerated).</li>
+            <li><strong>Confidence</strong>: probability of the predicted class, max(score, 1 − score). The release stores it in a column named <code class="font-mono">UQ_sd</code>/<code class="font-mono">sd</code>; it is not a standard deviation.</li>
+            <li><strong>One score per allele.</strong> The database can hold several rows for an allele when protein-level annotations (ESM1v) map to several proteins; the score is identical across them. The <em>Transcript context</em> panel shows which transcript each source used.</li>
+            <li>Legacy names: <code class="font-mono">UQ_score</code> = AnnotateMissense score, <code class="font-mono">UQ_pred</code> = prediction, <code class="font-mono">UQ_BioSig_model_Final.tsv.gz</code> = the released AnnotateMissense prediction table.</li>
+        </ul>
+        <p class="rounded-lg bg-amber-50 p-3 text-amber-900">Scores support research prioritisation and variant triage. They are not clinical classifications; integrate them with ACMG/AMP evidence and expert review.</p>
+    </article>
+</section>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6 lg:px-8">
+    <header class="rounded-xl border border-border bg-white p-5 shadow-sm">
+        <h1 class="text-xl font-bold">Annotate a VCF</h1>
+        <p class="mt-1 text-sm text-neutral">
+            Upload a GRCh38 VCF (or .vcf.gz, or a plain <span class="font-mono">chrom pos ref alt</span> list). Each ALT allele is normalised
+            (chr prefix, upper case, shared bases trimmed) and matched to the precomputed release. Nothing is stored; the file is processed in memory.
+        </p>
+        <p class="mt-2 text-xs text-neutral">Limit on this server: {{ "{:,}".format(max_vcf_alleles) }} ALT alleles per file. For larger files or private data, run
+            <code class="font-mono">annotatemissense annotate-vcf in.vcf.gz -o out.vcf --db variants.duckdb</code> offline (<a class="text-primary underline" href="{{ docs_url }}vcf/" target="_blank" rel="noopener">guide</a>).</p>
+    </header>
+
+    <section class="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
+        <form id="annotate-form" class="space-y-3 rounded-xl border border-border bg-white p-5 shadow-sm">
+            <div id="annotateDrop" class="rounded-lg border-2 border-dashed border-teal-300 bg-teal-50 p-6 text-center text-sm text-slate-600">
+                Drop a VCF here or choose a file
+                <input id="annotate_file" name="file" type="file" accept=".vcf,.gz,.txt,.tsv,.csv" class="mt-3 block w-full text-xs">
+            </div>
+            <div>
+                <label for="annotate_text" class="mb-1 block text-xs font-semibold text-slate-600">…or paste VCF text</label>
+                <textarea id="annotate_text" name="text" rows="9" class="w-full rounded-lg border-border font-mono text-xs" spellcheck="false"></textarea>
+                <button type="button" id="loadExampleVcf" class="mt-1 text-xs font-semibold text-primary underline">Load example VCF</button>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">Annotate →</button>
+                <button type="button" data-annotate-download="vcf" class="rounded-lg border border-border px-4 py-2 text-sm font-semibold">⬇ Annotated VCF</button>
+                <button type="button" data-annotate-download="tsv" class="rounded-lg border border-border px-4 py-2 text-sm font-semibold">⬇ TSV</button>
+            </div>
+            <div id="annotateMessage"></div>
+        </form>
+
+        <section class="rounded-xl border border-border bg-white p-5 shadow-sm">
+            <h2 class="text-base font-bold">Summary</h2>
+            <div class="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4" id="annotateSummary">
+                <div class="rounded-lg border border-border p-3"><p class="text-xs text-neutral">Records</p><p data-sum="records" class="text-lg font-bold">–</p></div>
+                <div class="rounded-lg border border-border p-3"><p class="text-xs text-neutral">ALT alleles</p><p data-sum="alt_alleles" class="text-lg font-bold">–</p></div>
+                <div class="rounded-lg border border-border p-3"><p class="text-xs text-neutral">Scored</p><p data-sum="found" class="text-lg font-bold text-success">–</p></div>
+                <div class="rounded-lg border border-border p-3"><p class="text-xs text-neutral">Not in release</p><p data-sum="not_in_release" class="text-lg font-bold text-warning">–</p></div>
+                <div class="rounded-lg border border-border p-3"><p class="text-xs text-neutral">Not SNV (skipped)</p><p data-sum="not_snv" class="text-lg font-bold">–</p></div>
+                <div class="rounded-lg border border-border p-3"><p class="text-xs text-neutral">Invalid</p><p data-sum="invalid" class="text-lg font-bold">–</p></div>
+                <div class="rounded-lg border border-border p-3"><p class="text-xs text-neutral">Damaging (D)</p><p data-sum="damaging" class="text-lg font-bold text-danger">–</p></div>
+                <div class="rounded-lg border border-border p-3"><p class="text-xs text-neutral">Tolerated (T)</p><p data-sum="tolerated" class="text-lg font-bold text-success">–</p></div>
+            </div>
+            <div id="annotateWarnings" class="mt-3"></div>
+            <p class="mt-3 text-xs text-neutral">Output INFO fields (Number=A, one value per ALT): <code class="font-mono">AnnotateMissense_score</code>, <code class="font-mono">AnnotateMissense_pred</code> (D/T), <code class="font-mono">AnnotateMissense_status</code> (found · no_score · not_in_release · not_snv · invalid).</p>
+        </section>
+    </section>
+
+    <section class="rounded-xl border border-border bg-white p-5 shadow-sm">
+        <h2 class="text-base font-bold">Per-allele results</h2>
+        <div class="mt-3 overflow-x-auto">
+            <table class="min-w-full divide-y divide-border text-sm">
+                <thead class="bg-slate-50"><tr>
+                    <th class="px-3 py-2 text-left">Line</th><th class="px-3 py-2 text-left">Input</th><th class="px-3 py-2 text-left">Status</th>
+                    <th class="px-3 py-2 text-left">Score</th><th class="px-3 py-2 text-left">Pred</th><th class="px-3 py-2 text-left">Gene</th>
+                    <th class="px-3 py-2 text-left">AA change (first refGene)</th><th class="px-3 py-2 text-left">ClinVar</th>
+                </tr></thead>
+                <tbody id="annotateBody" class="divide-y divide-border"><tr><td colspan="8" class="px-3 py-6 text-center text-neutral">No file annotated yet.</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+</section>
+
+<script id="example-vcf" type="text/plain">##fileformat=VCFv4.2
+##reference=GRCh38
+##contig=<ID=chr22,length=50818468,assembly=GRCh38>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr22	19963748	rs4680	G	A	.	PASS	.
+chr22	21549460	.	C	A,G	.	PASS	.
+chr22	36305985	.	G	A	.	PASS	.
+chr22	36284163	.	C	T	.	PASS	.
+chr22	36284474	.	C	T	.	PASS	.
+chr22	36305985	indel_demo	GG	G	.	PASS	.
+chr22	36305984	padded_snv_demo	CG	CA	.	PASS	.
+chr22	10000000	noncoding_demo	A	G	.	PASS	.</script>
+{% endblock %}
