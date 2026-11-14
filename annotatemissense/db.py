@@ -157,11 +157,11 @@ def column_group(name: str) -> str:
     if name.startswith("ExAC_"):
         return "ExAC"
     if name.startswith("gnomad211_"):
-        return "gnomAD v2.1.1 exome"
+        return "gnomAD v2.1.1 exome (ANNOVAR gnomad211_exome)"
     if name.startswith("gnomad30_") or name == "AF_ami":
-        return "gnomAD v3.0 genome"
+        return "gnomAD v3.0 genome (ANNOVAR gnomad30_genome)"
     if name.startswith(("AF", "non_topmed_", "non_neuro_", "non_cancer_", "controls_")):
-        return "gnomAD exome (ANNOVAR gnomad_exome)"
+        return "gnomAD v2.1.1 genome (ANNOVAR gnomad211_genome)"
     if name in {"avsnp150"}:
         return "dbSNP 150"
     if name in {"cosmic70"}:
