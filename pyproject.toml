@@ -7,7 +7,7 @@ name = "annotatemissense"
 version = "1.1.0"
 description = "Lookup, VCF annotation, REST API and web server for AnnotateMissense GRCh38 missense pathogenicity predictions"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{ name = "Muhammad Muneeb" }, { name = "David B. Ascher" }]
 dependencies = ["duckdb>=1.4.3,<2"]
 
