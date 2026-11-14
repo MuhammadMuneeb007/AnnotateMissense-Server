@@ -260,7 +260,13 @@
 
         variantTitle.textContent = `${safeValue(variant.chr)}:${safeValue(variant.pos)} ${safeValue(variant.ref)} → ${safeValue(variant.alt)}`;
         document.getElementById("variantHeaderMeta").textContent = `GRCh38 · ${safeValue(gene.name)} · ${safeValue(gene.function)}`;
-        updateBadge(document.getElementById("clinvarBadge"), clinical.CLNSIG ? `ClinVar: ${clinical.CLNSIG}` : "Not in ClinVar");
+        const scoreOnly = data.provenance && data.provenance.annotation_rows === null;
+        updateBadge(document.getElementById("clinvarBadge"), clinical.CLNSIG ? `ClinVar: ${clinical.CLNSIG}` : scoreOnly ? "ClinVar: not loaded here" : "Not in ClinVar");
+        if (scoreOnly) {
+            ["section-info", "section-transcripts", "section-scores", "section-population", "section-conservation"].forEach((id) => document.getElementById(id)?.classList.add("hidden"));
+            document.getElementById("esmChart")?.parentElement?.classList.add("hidden");
+            document.getElementById("download-json")?.classList.add("hidden");
+        }
 
         const scoreNum = asNumber(am.score);
         document.getElementById("amScoreText").textContent = fmtScore(am.score, 6);

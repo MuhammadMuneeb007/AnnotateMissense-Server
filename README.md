@@ -4,6 +4,7 @@ Web server, REST API and command-line tool for **AnnotateMissense** — precompu
 pathogenicity scores for 90,643,830 variants
 ([Zenodo 10.5281/zenodo.19981867](https://doi.org/10.5281/zenodo.19981867)).
 
+- **Live demo:** <https://annotatemissense.vercel.app> (scores for all chr22 alleles; full reports for 15 chr22 genes)
 - **Documentation:** <https://muhammadmuneeb007.github.io/AnnotateMissense/>
 - **Pipeline / model code:** <https://github.com/MuhammadMuneeb007/AnnotateMissense>
 - **This repository:** the software that serves the released database — lookups, VCF annotation, REST API, web UI.
@@ -88,7 +89,8 @@ Measured on a laptop (Windows 11, DuckDB 1.5, chromosome-22 extract, 1.68 M rows
 annotatemissense/   core library (DuckDB only): db.py lookups, vcf.py annotation, cli.py
 app/                Flask web UI and REST API (templates, static JS/CSS)
 tests/              pytest suite on a 146-row extract of the release (tests/data)
-scripts/            take_screenshots.py (Playwright) used for the documentation
+scripts/            take_screenshots.py (Playwright); build_demo_data.py (demo/ data)
+demo/               bundled chr22 demo data used by the hosted instance when no data/ is configured
 docs/screenshots/   screenshots of the running server
 ```
 
