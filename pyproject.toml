@@ -9,10 +9,15 @@ description = "Lookup, VCF annotation, REST API and web server for AnnotateMisse
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Muhammad Muneeb" }, { name = "David B. Ascher" }]
-dependencies = ["duckdb>=1.4.3,<2"]
+dependencies = [
+    "duckdb>=1.4.3,<2",
+    "flask>=3.0,<4",
+    "flask-cors>=4.0",
+    "flask-limiter>=3.7",
+    "waitress>=3.0",
+]
 
 [project.optional-dependencies]
-server = ["flask>=3.0,<4", "flask-cors>=4.0", "flask-limiter>=3.7", "waitress>=3.0"]
 dev = ["pytest>=8"]
 
 [project.scripts]

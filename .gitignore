@@ -12,3 +12,7 @@ data/*
 *.tsv.gz
 !tests/data/*
 .env
+
+# bundled demo data for the hosted instance
+!demo/
+!demo/*.duckdb

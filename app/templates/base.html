@@ -46,7 +46,13 @@
         {% if not coverage.genome_wide %}
         <div class="border-t border-amber-200 bg-amber-50">
             <p class="mx-auto max-w-7xl px-4 py-1.5 text-xs text-amber-900 sm:px-6 lg:px-8">
-                <strong>Demo instance:</strong> this server holds {{ coverage.label }} ({{ "{:,}".format(coverage.annotation_rows or coverage.score_index_alleles or 0) }} rows).
+                <strong>Demo instance:</strong>
+                {% if coverage.partial_annotations %}
+                AnnotateMissense scores for all {{ "{:,}".format(coverage.score_alleles or 0) }} alleles on {{ coverage.label }};
+                full 337-column reports for {{ coverage.annotation_genes|length }} genes ({{ coverage.annotation_genes|join(", ") }}).
+                {% else %}
+                this server holds {{ coverage.label }} ({{ "{:,}".format(coverage.score_alleles or 0) }} rows).
+                {% endif %}
                 The full 90.6M-variant release runs on the same software — see <a class="underline" href="{{ docs_url }}server/" target="_blank" rel="noopener">self-hosting</a>.
                 {% if instance_note %}{{ instance_note }}{% endif %}
             </p>

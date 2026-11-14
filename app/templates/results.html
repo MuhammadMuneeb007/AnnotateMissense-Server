@@ -24,6 +24,12 @@
         <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{{ error_message }}</div>
     {% endif %}
 
+    {% if payload and payload.provenance.annotation_rows is none %}
+        <div class="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
+            Score from the AnnotateMissense prediction table. The detailed 337-column annotations for this allele are not loaded on this instance{% if coverage.annotation_genes %} (full reports are available for {{ coverage.annotation_genes|join(", ") }}){% endif %}.
+        </div>
+    {% endif %}
+
     <div id="resultsFallback" class="rounded-xl border border-border bg-white p-4 text-sm text-neutral {% if payload or error_message %}hidden{% endif %}">
         Submit chr, pos, ref and alt to load a variant.
     </div>

@@ -18,9 +18,9 @@ SERVER_REPO_URL = "https://github.com/MuhammadMuneeb007/AnnotateMissense-Server"
 DOCS_URL = "https://muhammadmuneeb007.github.io/AnnotateMissense/"
 
 
-def _default_path(root: str, *candidates: str):
-    for name in candidates:
-        path = os.path.join(root, "data", name)
+def _first_existing(root: str, *candidates: str):
+    for rel in candidates:
+        path = os.path.join(root, rel)
         if os.path.isfile(path):
             return path
     return None
@@ -31,16 +31,31 @@ def _coverage(db: AnnotateMissenseDB) -> dict:
     stats = db.stats()
     ann = stats.get("annotation_database") or {}
     idx = stats.get("score_index") or {}
-    chroms = sorted(set(ann.get("chromosomes", {})) | set(idx.get("chromosomes", {})),
-                    key=lambda c: (len(c), c))
-    genome_wide = len(chroms) >= 24
+
+    def order(chroms):
+        return sorted(chroms, key=lambda c: (len(c), c))
+
+    def label(chroms):
+        return "all chromosomes" if len(chroms) >= 24 else ", ".join(c.replace("chr", "chr ") for c in chroms)
+
+    score_chroms = order(set(idx.get("chromosomes", {})) | set(ann.get("chromosomes", {})))
+    ann_chroms = order(ann.get("chromosomes", {}))
+    genes = None
+    if db.has_annotations and (ann.get("rows") or 0) <= 300_000:
+        genes = [r["g"] for r in db.query(
+            """SELECT DISTINCT unnest(string_split(regexp_replace("Gene.refGene", ';', ',', 'g'), ',')) AS g
+               FROM ann.variants WHERE "ExonicFunc.refGene" IS NOT NULL ORDER BY 1""")]
     return {
-        "chromosomes": chroms,
-        "genome_wide": genome_wide,
+        "chromosomes": score_chroms,
+        "genome_wide": len(score_chroms) >= 24 and len(ann_chroms) >= 24,
+        "label": label(score_chroms),
+        "score_alleles": idx.get("alleles") or ann.get("rows"),
         "annotation_rows": ann.get("rows"),
         "annotation_columns": ann.get("columns"),
+        "annotation_label": label(ann_chroms) if ann_chroms else None,
+        "annotation_genes": genes,
         "score_index_alleles": idx.get("alleles"),
-        "label": ("all chromosomes" if genome_wide else ", ".join(c.replace("chr", "chr ") for c in chroms)),
+        "partial_annotations": bool(db.has_scores and db.has_annotations and genes is not None),
     }
 
 
@@ -48,8 +63,13 @@ def create_app() -> Flask:
     app = Flask(__name__)
     root = os.path.abspath(os.path.join(app.root_path, ".."))
 
-    annotations = os.getenv("ANNOTATEMISSENSE_DB") or _default_path(root, "variants.duckdb", "variants_dev.duckdb")
-    scores = os.getenv("ANNOTATEMISSENSE_SCORES") or _default_path(root, "annotatemissense_scores.duckdb")
+    annotations = os.getenv("ANNOTATEMISSENSE_DB") or _first_existing(
+        root, "data/variants.duckdb", "data/variants_dev.duckdb")
+    scores = os.getenv("ANNOTATEMISSENSE_SCORES") or _first_existing(root, "data/annotatemissense_scores.duckdb")
+    if not annotations and not scores:
+        # Bundled demo data (scripts/build_demo_data.py): chr22 scores + a chr22 gene panel.
+        annotations = _first_existing(root, "demo/annotatemissense_demo_annotations.duckdb")
+        scores = _first_existing(root, "demo/annotatemissense_demo_scores.duckdb")
     db = AnnotateMissenseDB(annotations, scores)
 
     app.config.update(
@@ -63,7 +83,7 @@ def create_app() -> Flask:
         INSTANCE_NOTE=os.getenv("INSTANCE_NOTE", ""),
     )
 
-    if os.getenv("TRUST_PROXY", "0") == "1":
+    if os.getenv("TRUST_PROXY", "0") == "1" or os.getenv("VERCEL") == "1":
         from werkzeug.middleware.proxy_fix import ProxyFix
 
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)

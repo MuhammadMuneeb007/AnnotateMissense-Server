@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import os
 import re
+import tempfile
 import threading
 import uuid
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
@@ -220,6 +221,9 @@ class AnnotateMissenseDB:
         self.annotations_path = annotations_path or None
         self.scores_path = scores_path or None
         self._conn = duckdb.connect(":memory:")
+        # Spill/temp files go to the OS temp dir (the app directory can be read-only, e.g. serverless hosts).
+        tmp = os.path.join(tempfile.gettempdir(), "annotatemissense_duckdb").replace("\\", "/")
+        self._conn.execute(f"SET temp_directory = {_ql(tmp)}")
         self._local = threading.local()
         self.annotation_columns: List[str] = []
         self.annotation_types: Dict[str, str] = {}
@@ -352,8 +356,8 @@ class AnnotateMissenseDB:
             return f"COALESCE({', '.join(terms)})" if terms else "NULL"
 
         selects += [
-            f"{coalesce(score_terms)} AS {SCORE_FIELD}",
-            f"{coalesce(conf_terms)} AS {CONFIDENCE_FIELD}",
+            f"ROUND(CAST({coalesce(score_terms)} AS DOUBLE), 6) AS {SCORE_FIELD}",
+            f"ROUND(CAST({coalesce(conf_terms)} AS DOUBLE), 6) AS {CONFIDENCE_FIELD}",
             f"{coalesce(pred_terms)} AS {PRED_FIELD}",
             f"({' OR '.join(found_terms)}) AS found",
         ]
